@@ -1,21 +1,21 @@
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-
-import { MultilingualReact } from './multilingual-react/provider';
 import zh from './assets/zh.json';
 import en from './assets/en.json';
+import multilingual from './multilingual-react/core.ts';
+import { MultilingualProvider } from './multilingual-react/provider.tsx';
 
-const Provider = MultilingualReact.init({
+multilingual.init({
   resources: {
     zh,
     en
   },
-  fallback: 'zh'
+  lang: 'zh'
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <Provider>
+  <MultilingualProvider>
     <App />
-  </Provider>
+  </MultilingualProvider>
 );
