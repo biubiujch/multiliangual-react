@@ -1,6 +1,4 @@
-import React, { useContext, useState } from 'react';
-import zh from '../assets/zh.json';
-import en from '../assets/en.json';
+import React, { ReactNode, useContext, useMemo, useState } from 'react';
 
 type FlatObject = {
   [key: string]: string | number | FlatObject;
@@ -13,12 +11,6 @@ type FlattenKeys<T> = T extends object
 
 interface Options<T> {
   resources: T;
-  lang: keyof T;
-}
-
-interface Context<T, K extends string> {
-  resources: T;
-  assets: Record<keyof T, Record<K, string | number>>;
   lang: keyof T;
 }
 
@@ -38,33 +30,43 @@ function flattenObject(obj: Record<string, any>, parentKey = ''): FlatObject {
 }
 
 export function init<T extends Record<string, any>>(options: Options<T>) {
-  const assets = Object.keys(options.resources).reduce((res, key: keyof T) => {
+  const { lang, resources } = options;
+
+  const text = resources[lang];
+  type TextKeys = FlattenKeys<typeof text>;
+
+  const assets = Object.keys(resources).reduce((res, key: keyof T) => {
     res[key] = flattenObject(options.resources[key]) as Record<string, string | number>;
     return res;
-  }, {} as Record<keyof T, Record<string, string | number>>);
+  }, {} as Record<keyof T, Record<TextKeys, string | number>>);
 
-  return React.createContext({ ...options, assets });
-}
+  const Context = React.createContext({ lang, assets });
 
-const Context = init({
-  resources: {
-    zh,
-    en
-  },
-  lang: 'zh'
-});
+  const useLang = () => {
+    const context = useContext(Context);
+    const [lang, setLang] = useState(context.lang);
 
-const useLang = () => {
-  const context = useContext(Context);
-  const [lang, setLang] = useState(context.lang);
+    const Texts = useMemo(() => {
+      return context.assets[lang];
+    }, [lang]);
 
-  const t = (key: string) => {
-    return context.assets[lang];
+    type TextKeys = keyof typeof Texts;
+
+    const t = (key: TextKeys) => {
+      return context.assets[lang][key];
+    };
+
+    return {
+      lang,
+      t,
+      setLang
+    };
   };
 
   return {
-    lang,
-    t,
-    setLang
+    Provider: ({ children }: { children?: ReactNode }) => (
+      <Context.Provider value={{ lang, assets }}>{children}</Context.Provider>
+    ),
+    useLang
   };
-};
+}
