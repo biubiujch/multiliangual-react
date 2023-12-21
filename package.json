@@ -1,11 +1,30 @@
 {
   "name": "multilingual-react",
-  "private": true,
-  "version": "0.0.0",
+  "private": false,
+  "version": "0.0.2-alpha",
   "type": "module",
+  "license": "MIT",
+  "author": "chris yang",
+  "repository": "https://github.com/biubiujch/multiliangual-react.git",
+  "main": "./lib/multilingual-react.umd.js",
+  "module": "./lib/multilingual-react.es.js",
+  "types": "./lib/multilingual-react.d.ts",
+  "description": "React multilingual util",
+  "peerDependencies": {
+    "react": ">=18.2.43"
+  },
+  "files": [
+    "lib"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/multilingual-react.es.js",
+      "require": "./lib/multilingual-react.umd.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc -p tsconfig.build.json",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

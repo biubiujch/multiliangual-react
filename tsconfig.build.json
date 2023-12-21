@@ -1,0 +1,11 @@
+// tsconfig.build.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "lib"
+  },
+  "include": ["src/multilingual-react/index.tsx"]
+}

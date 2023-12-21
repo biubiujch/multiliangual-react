@@ -1,5 +1,6 @@
 {
-  "hello": "Hello,world",
+  "hello": "Hello",
+  "world": "world",
   "info": {
     "detail": "Anything is possible"
   }
