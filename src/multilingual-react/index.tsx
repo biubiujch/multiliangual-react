@@ -40,7 +40,9 @@ export function init<T extends Record<string, any>>(options: Options<T>) {
     return res;
   }, {} as Record<keyof T, Record<TextKeys, string | number>>);
 
-  const Context = React.createContext({ lang, assets });
+  const initialValue = { lang, assets };
+
+  const Context = React.createContext(initialValue);
 
   const useLang = () => {
     const context = useContext(Context);
@@ -52,8 +54,20 @@ export function init<T extends Record<string, any>>(options: Options<T>) {
 
     type TextKeys = keyof typeof Texts;
 
-    const t = (key: TextKeys) => {
-      return context.assets[lang][key];
+    const t = (key: TextKeys, replace?: Record<string, string | number>) => {
+      if (!context.assets[lang]) return key;
+      if (context.assets[lang][key] === undefined || context.assets[lang][key] === null) return key;
+      if (replace) {
+        const text = context.assets[lang][key];
+        if (text && typeof text === 'string') {
+          return text.replace(/\{(\w+)\}/g, (match: string, replaceKey: string) => {
+            const value = replace[replaceKey] as string;
+            return value !== undefined ? value : match;
+          });
+        }
+      } else {
+        return context.assets[lang][key];
+      }
     };
 
     return {
@@ -65,7 +79,7 @@ export function init<T extends Record<string, any>>(options: Options<T>) {
 
   return {
     Provider: ({ children }: { children?: ReactNode }) => (
-      <Context.Provider value={{ lang, assets }}>{children}</Context.Provider>
+      <Context.Provider value={initialValue}>{children}</Context.Provider>
     ),
     useLang
   };
