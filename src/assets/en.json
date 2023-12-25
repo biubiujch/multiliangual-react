@@ -2,6 +2,7 @@
   "hello": "Hello",
   "world": "world",
   "info": {
-    "detail": "Anything is possible"
+    "detail": "Anything is possible",
+    "welcome": "Welcome, {name}"
   }
 }

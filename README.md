@@ -1,7 +1,7 @@
 ## install
 
 ```bash
- pnmp install multilingual-react
+ npm install multilingual-react
 ```
 
 ## useage
@@ -11,17 +11,21 @@ const zh = {
   hello: '你好',
   login: {
     login: '登录',
-    welcome: '欢迎，{name}用户',
+    welcome: '欢迎，{name}',
     level: 'Level{level}'
-  }
+  },
+  error: '网络连接异常',
+  ok: '查询成功'
 };
 const en = {
   hello: 'hello',
   login: {
     login: 'Login',
-    welcome: 'Welcome,{name}用户',
+    welcome: 'Welcome,{name}',
     level: 'Level{level}'
-  }
+  },
+  error: 'Network connection abnormality',
+  ok: 'OK'
 };
 ```
 
@@ -31,20 +35,22 @@ import { init } from 'multilingual-react';
 import zh from '/path';
 import en from './path';
 
-export const { Provider, useLang } = init({
+export const { setLang, getLang, translate, useLang } = init({
   resources: { zh, en },
   lang: 'zh'
 });
 ```
 
-```JSX
+```typescript
+// ...
+const lang = getLang();
+setLang(lang === 'zh' ? 'en' : 'zh');
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <Provider>
-    <App />
-  </Provider>
-);
-
+fetch().then((data) => {
+ console.log(translate('ok');)
+}).catch((e)=>{
+   console.error(translate('error');)
+});
 ```
 
 ```JSX
@@ -57,6 +63,7 @@ function App() {
       <button onClick={()=>{setLang('zh')}}>zh</ button>
       <button onClick={()=>{setLang('en')}}>en</ button>
       <div>{t('hello')}</div>
+      <div>{t('welcome',{name:"Bob"})}</div>
     </>
   );
 }

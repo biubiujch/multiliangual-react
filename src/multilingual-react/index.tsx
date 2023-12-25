@@ -1,4 +1,4 @@
-import React, { ReactNode, useContext, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type FlatObject = {
   [key: string]: string | number | FlatObject;
@@ -31,56 +31,94 @@ function flattenObject(obj: Record<string, any>, parentKey = ''): FlatObject {
 
 export function init<T extends Record<string, any>>(options: Options<T>) {
   const { lang, resources } = options;
-
   const text = resources[lang];
   type TextKeys = FlattenKeys<typeof text>;
-
   const assets = Object.keys(resources).reduce((res, key: keyof T) => {
     res[key] = flattenObject(options.resources[key]) as Record<string, string | number>;
     return res;
   }, {} as Record<keyof T, Record<TextKeys, string | number>>);
+  const value = { lang, assets };
 
-  const initialValue = { lang, assets };
+  const callbacks: Set<(lang: keyof T, ...args: any[]) => void> = new Set();
 
-  const Context = React.createContext(initialValue);
+  const sub = (fn: (lang: keyof T, ...args: any[]) => void) => {
+    callbacks.add(fn);
+  };
+
+  const remove = (fn: (lang: keyof T, ...args: any[]) => void) => {
+    callbacks.delete(fn);
+  };
+
+  const setLang = (lang: keyof T) => {
+    value.lang = lang;
+    callbacks.forEach((fn) => fn(lang));
+  };
+
+  const getLang = () => value.lang;
+
+  const translate = (key: TextKeys, replace?: Record<string, string | number>) => {
+    if (!value.assets[getLang()]) return key;
+    if (value.assets[getLang()][key] === undefined || value.assets[getLang()][key] === null) return key;
+    if (replace) {
+      const text = value.assets[getLang()][key];
+      if (text && typeof text === 'string') {
+        return text.replace(/\{(\w+)\}/g, (match: string, replaceKey: string) => {
+          const value = replace[replaceKey] as string;
+          return value !== undefined ? value : match;
+        });
+      }
+    } else {
+      return value.assets[getLang()][key];
+    }
+  };
 
   const useLang = () => {
-    const context = useContext(Context);
-    const [lang, setLang] = useState(context.lang);
+    const [lang, setL] = useState(value.lang);
+
+    useEffect(() => {
+      sub(setL);
+      return () => remove(setL);
+    }, []);
 
     const Texts = useMemo(() => {
-      return context.assets[lang];
+      return value.assets[lang];
     }, [lang]);
 
     type TextKeys = keyof typeof Texts;
 
-    const t = (key: TextKeys, replace?: Record<string, string | number>) => {
-      if (!context.assets[lang]) return key;
-      if (context.assets[lang][key] === undefined || context.assets[lang][key] === null) return key;
-      if (replace) {
-        const text = context.assets[lang][key];
-        if (text && typeof text === 'string') {
-          return text.replace(/\{(\w+)\}/g, (match: string, replaceKey: string) => {
-            const value = replace[replaceKey] as string;
-            return value !== undefined ? value : match;
-          });
+    const t = useCallback(
+      (key: TextKeys, replace?: Record<string, string | number>) => {
+        if (!value.assets[lang]) return key;
+        if (value.assets[lang][key] === undefined || value.assets[lang][key] === null) return key;
+        if (replace) {
+          const text = value.assets[lang][key];
+          if (text && typeof text === 'string') {
+            return text.replace(/\{(\w+)\}/g, (match: string, replaceKey: string) => {
+              const value = replace[replaceKey] as string;
+              return value !== undefined ? value : match;
+            });
+          }
+        } else {
+          return value.assets[lang][key];
         }
-      } else {
-        return context.assets[lang][key];
-      }
-    };
+      },
+      [lang]
+    );
 
     return {
       lang,
       t,
-      setLang
+      setLang: (lang: keyof T) => {
+        setL(lang);
+        value.lang = lang;
+      }
     };
   };
 
   return {
-    Provider: ({ children }: { children?: ReactNode }) => (
-      <Context.Provider value={initialValue}>{children}</Context.Provider>
-    ),
-    useLang
+    useLang,
+    setLang,
+    getLang,
+    translate
   };
 }
