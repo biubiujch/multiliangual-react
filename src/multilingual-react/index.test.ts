@@ -7,7 +7,9 @@ describe('multilingual', () => {
       hello: 'hello'
     };
     const res = init({ resources: { zh }, lang: 'zh' });
-    expect(res).toHaveProperty('Provider');
     expect(res).toHaveProperty('useLang');
+    expect(res).toHaveProperty('setLang');
+    expect(res).toHaveProperty('getLang');
+    expect(res).toHaveProperty('translate');
   });
 });
