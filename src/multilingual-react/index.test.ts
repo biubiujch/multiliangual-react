@@ -11,5 +11,6 @@ describe('multilingual', () => {
     expect(res).toHaveProperty('setLang');
     expect(res).toHaveProperty('getLang');
     expect(res).toHaveProperty('translate');
+    expect(res.getLang()).toBe('zh');
   });
 });
