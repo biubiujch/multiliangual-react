@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type FlatObject = {
-  [key: string]: string | number | FlatObject;
+  [key: string]: string | FlatObject;
 };
 
 type FlattenKeys<T> = T extends object
-  ? { [K in keyof T & string]: T[K] extends object ? `${K & string}.${FlattenKeys<T[K]>}` : `${K & string}` }[keyof T &
-      string]
+  ? { [K in keyof T & string]: T[K] extends object ? `${K & string}.${FlattenKeys<T[K]>}` : `${K & string}` }[keyof T & string]
   : '';
 
 interface Options<T> {
@@ -34,9 +33,9 @@ export function init<T extends Record<string, any>>(options: Options<T>) {
   const text = resources[lang];
   type TextKeys = FlattenKeys<typeof text>;
   const assets = Object.keys(resources).reduce((res, key: keyof T) => {
-    res[key] = flattenObject(options.resources[key]) as Record<string, string | number>;
+    res[key] = flattenObject(options.resources[key]) as Record<string, string>;
     return res;
-  }, {} as Record<keyof T, Record<TextKeys, string | number>>);
+  }, {} as Record<keyof T, Record<TextKeys, string>>);
   const value = { lang, assets };
 
   const callbacks: Set<(lang: keyof T, ...args: any[]) => void> = new Set();
@@ -87,19 +86,17 @@ export function init<T extends Record<string, any>>(options: Options<T>) {
     type TextKeys = keyof typeof Texts;
 
     const t = useCallback(
-      (key: TextKeys, replace?: Record<string, string | number>) => {
-        if (!value.assets[lang]) return key;
-        if (value.assets[lang][key] === undefined || value.assets[lang][key] === null) return key;
+      (key: TextKeys, replace?: Record<string, string | number>): string => {
+        if (!value.assets[lang]) return key as string;
+        if (value.assets[lang][key] === undefined || value.assets[lang][key] === null) return key as string;
         if (replace) {
           const text = value.assets[lang][key];
-          if (text && typeof text === 'string') {
-            return text.replace(/\{(\w+)\}/g, (match: string, replaceKey: string) => {
-              const value = replace[replaceKey] as string;
-              return value !== undefined ? value : match;
-            });
-          }
+          return text.replace(/\{(\w+)\}/g, (match: string, replaceKey: string) => {
+            const value = replace[replaceKey] as string;
+            return value !== undefined ? value : match;
+          });
         } else {
-          return value.assets[lang][key];
+          return value.assets[lang][key] as string;
         }
       },
       [lang]
